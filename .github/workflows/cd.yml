@@ -1,34 +1,40 @@
 name: CD Pipeline
-
 on:
   push:
     branches:
-      - main
-
+      - main 
 jobs:
   deploy:
+    name: deploy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Log in to Heroku
-        env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+          
+      - name: Install dependencies
         run: |
-          echo "$HEROKU_API_KEY" | docker login --username=_ --password-stdin registry.heroku.com
-      
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
       - name: Install Heroku CLI
-        run: |
-          curl https://cli-assets.heroku.com/install.sh | sh
-
-      - name: Build Docker image
-        run: docker build -t registry.heroku.com/book-project-hng/web .
-
-      - name: Push Docker image to Heroku
-        run: docker push registry.heroku.com/book-project-hng/web
-
-      - name: Release Docker image to Heroku
+        run: curl https://cli-assets.heroku.com/install.sh | sh
+          
+      - name: Login to Heroku Container Registry
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-        run: |
-          heroku container:release web --app book-project-hng
+        run: heroku container:login
+        
+      - name: Build and Push Docker Image to Heroku
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: heroku container:push web --app book-project-hng
+        
+      - name: Release the Container
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: heroku container:release web --app book-project-hng
