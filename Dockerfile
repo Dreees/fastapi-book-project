@@ -10,11 +10,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Replace the main Nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
 
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
-EXPOSE 80
-
+# Heroku assigns the PORT dynamically; no need to EXPOSE
 CMD ["/start.sh"]
